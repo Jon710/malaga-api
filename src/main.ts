@@ -5,6 +5,7 @@ import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 import passport from "./config/passport";
 import knex from "./db/knex";
+import loggerMiddleware from "./middlewares/logger.middleware";
 
 const app = express();
 
@@ -18,6 +19,7 @@ knex
     process.exit(1);
   });
 
+app.use(loggerMiddleware);
 app.use("/api/auth", authRoutes);
 app.use(
   "/api/users",
