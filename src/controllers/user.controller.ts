@@ -10,7 +10,7 @@ export class UserController {
       const user = await this.userService.create(req.body);
       res.status(HttpStatusCodes.CREATED).json(user);
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
     }
   }
 

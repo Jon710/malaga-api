@@ -9,9 +9,9 @@ export class AuthService {
   private userRepository: UserRepository;
   private userService: UserService;
 
-  constructor() {
-    this.userRepository = new UserRepository();
-    this.userService = new UserService();
+  constructor(userRepository: UserRepository, userService: UserService) {
+    this.userRepository = userRepository;
+    this.userService = userService;
   }
 
   async login(email: string, password: string): Promise<string | null> {

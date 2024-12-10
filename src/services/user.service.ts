@@ -4,12 +4,13 @@ import { User, UserRole } from "../entities/user.entity";
 import ForbiddenError from "../exceptions/forbidden-exception";
 import UserAlreadyExistsException from "../exceptions/user-exists-exception";
 
-// TODO types (no any)
+type DecodedUserToken = { id: number; role: UserRole } | undefined;
+
 export class UserService {
   private userRepository: UserRepository;
 
-  constructor() {
-    this.userRepository = new UserRepository();
+  constructor(userRepository: UserRepository) {
+    this.userRepository = userRepository;
   }
 
   async create(user: User): Promise<User> {
@@ -21,7 +22,7 @@ export class UserService {
     return this.userRepository.create(user);
   }
 
-  async findAll(user: any): Promise<User[]> {
+  async findAll(user: DecodedUserToken): Promise<User[]> {
     const isUser = user?.role === UserRole.USER;
 
     if (isUser) {
@@ -31,7 +32,10 @@ export class UserService {
     return this.userRepository.findAll();
   }
 
-  async findById(user: any, id: number): Promise<User | undefined> {
+  async findById(
+    user: DecodedUserToken,
+    id: number
+  ): Promise<User | undefined> {
     const isUser = user?.role === UserRole.USER;
 
     if (isUser && user?.id !== id) {
@@ -41,7 +45,11 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async update(id: number, user: any, data: Partial<User>): Promise<void> {
+  async update(
+    id: number,
+    user: DecodedUserToken,
+    data: Partial<User>
+  ): Promise<void> {
     const isUser = user?.role === UserRole.USER;
 
     if (isUser && user?.id !== id) {
@@ -55,7 +63,7 @@ export class UserService {
     await this.userRepository.update(id, data);
   }
 
-  async deleteById(id: number, user: any): Promise<void> {
+  async deleteById(id: number, user: DecodedUserToken): Promise<void> {
     const isUser = user?.role === UserRole.USER;
 
     if (isUser || user?.id === id) {

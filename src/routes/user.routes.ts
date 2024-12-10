@@ -3,9 +3,11 @@ import { UserController } from "../controllers/user.controller";
 import { UserService } from "../services/user.service";
 import { validate } from "../middlewares/validation.middleware";
 import { UserUpdateSchema } from "../schemas/user.schema";
+import { UserRepository } from "../repositories/user.repository";
 
 const router = Router();
-const userService = new UserService();
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
 router.get("/:id", (req, res) => userController.findById(req, res));
