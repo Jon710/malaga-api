@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
+import { HttpStatusCodes } from "../utils/http-status-codes";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -7,49 +8,59 @@ export class UserController {
   async create(req: Request, res: Response) {
     try {
       const user = await this.userService.create(req.body);
-      res.status(201).json(user);
+      res.status(HttpStatusCodes.CREATED).json(user);
     } catch (error: any) {
-      res.status(400).json({ error: error.message }); // TODO: improve error handling
+      res.status(400).json({ error: error.message });
     }
   }
 
-  async findAll(_: Request, res: Response) {
+  async findAll(req: Request, res: Response) {
     try {
-      const users = await this.userService.findAll();
-      res.status(200).json(users);
+      const users = await this.userService.findAll(req.user);
+      res.status(HttpStatusCodes.OK).json(users);
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
     }
   }
 
   async findById(req: Request, res: Response) {
     try {
-      const user = await this.userService.findById(parseInt(req.params.id));
+      const user = await this.userService.findById(
+        req.user,
+        parseInt(req.params.id)
+      );
+
       if (user) {
-        res.status(200).json(user);
+        res.status(HttpStatusCodes.OK).json(user);
       } else {
-        res.status(404).json({ message: "User not found" });
+        res
+          .status(HttpStatusCodes.NOT_FOUND)
+          .json({ message: "User not found" });
       }
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
     }
   }
 
   async update(req: Request, res: Response) {
     try {
-      await this.userService.update(parseInt(req.params.id), req.body);
-      res.status(204).send();
+      await this.userService.update(
+        parseInt(req.params.id),
+        req.user,
+        req.body
+      );
+      res.status(HttpStatusCodes.NO_CONTENT).send();
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
     }
   }
 
   async deleteById(req: Request, res: Response) {
     try {
-      await this.userService.deleteById(parseInt(req.params.id));
-      res.status(204).send();
+      await this.userService.deleteById(parseInt(req.params.id), req.user);
+      res.status(HttpStatusCodes.NO_CONTENT).send();
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
     }
   }
 }

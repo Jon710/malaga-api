@@ -25,7 +25,4 @@ app.use(
   userRoutes
 );
 
-// TODO: Use the error handling middleware with status codes
-// app.use(errorHandler);
-
 app.listen(process.env.PORT || 3000, () => console.log("Server is running!"));
