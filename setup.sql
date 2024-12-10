@@ -1,4 +1,3 @@
--- run this on a PG/DB GUI or terminal
 CREATE ROLE malaga WITH LOGIN PASSWORD 'malaga';
 
 CREATE DATABASE malagadb; 
