@@ -3,6 +3,7 @@ import { UserRepository } from "../repositories/user.repository";
 import { User, UserRole } from "../entities/user.entity";
 import UserAlreadyExistsException from "../exceptions/user-exists-exception";
 import ForbiddenError from "../exceptions/forbidden-exception";
+import NotFoundError from "../exceptions/not-found-exception";
 
 jest.mock("knex", () => {
   return () => ({
@@ -147,7 +148,7 @@ describe("UserService", () => {
       expect(userRepository.findById).toHaveBeenCalledWith(1);
     });
 
-    it("should throw an error if a user tries to access another user's details", async () => {
+    it("should throw a forbidden error if a user tries to access another user's details", async () => {
       await expect(
         userService.findById({ id: 1, role: UserRole.USER }, 2)
       ).rejects.toThrow(ForbiddenError);
@@ -158,18 +159,50 @@ describe("UserService", () => {
   describe("update", () => {
     it("should update the user if the user is an admin", async () => {
       const user: Partial<User> = { name: "João Luís Updated" };
+      const existingUser: User = {
+        id: 1,
+        name: "João Luís",
+        email: "joao@example.com",
+        password: "password",
+        role: UserRole.USER,
+      };
+
+      userRepository.findById.mockResolvedValue(existingUser);
 
       await userService.update(1, { id: 2, role: UserRole.ADMIN }, user);
 
+      expect(userRepository.findById).toHaveBeenCalledWith(1);
       expect(userRepository.update).toHaveBeenCalledWith(1, user);
     });
 
     it("should update the user if the user is updating their own details", async () => {
       const user: Partial<User> = { name: "João Luís Updated" };
+      const existingUser: User = {
+        id: 1,
+        name: "João Luís",
+        email: "joao@example.com",
+        password: "password",
+        role: UserRole.USER,
+      };
+
+      userRepository.findById.mockResolvedValue(existingUser);
 
       await userService.update(1, { id: 1, role: UserRole.USER }, user);
 
+      expect(userRepository.findById).toHaveBeenCalledWith(1);
       expect(userRepository.update).toHaveBeenCalledWith(1, user);
+    });
+
+    it("should throw a NotFoundError if the user does not exist", async () => {
+      const user: Partial<User> = { name: "João Luís Updated" };
+
+      userRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        userService.update(1, { id: 2, role: UserRole.ADMIN }, user)
+      ).rejects.toThrow(NotFoundError);
+      expect(userRepository.findById).toHaveBeenCalledWith(1);
+      expect(userRepository.update).not.toHaveBeenCalled();
     });
 
     it("should throw an error if a user tries to update another user's details", async () => {
@@ -184,9 +217,20 @@ describe("UserService", () => {
 
   describe("deleteById", () => {
     it("should delete the user if the user is an admin", async () => {
-      await userService.deleteById(1, { id: 2, role: UserRole.ADMIN });
+      const existingUser: User = {
+        id: 12,
+        name: "João Luís",
+        email: "joao@example.com",
+        password: "password",
+        role: UserRole.ADMIN,
+      };
 
-      expect(userRepository.deleteById).toHaveBeenCalledWith(1);
+      userRepository.findById.mockResolvedValue(existingUser);
+
+      await userService.deleteById(12, { id: 2, role: UserRole.ADMIN });
+
+      expect(userRepository.findById).toHaveBeenCalledWith(12);
+      expect(userRepository.deleteById).toHaveBeenCalledWith(12);
     });
 
     it("should throw an error if a user tries to delete another user", async () => {

@@ -1,66 +1,112 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import { HttpStatusCodes } from "../utils/http-status-codes";
+import ForbiddenError from "../exceptions/forbidden-exception";
+import NotFoundError from "../exceptions/not-found-exception";
 
 export class UserController {
-  constructor(private userService: UserService) {}
+  private userService: UserService;
 
-  async create(req: Request, res: Response) {
+  constructor(userService: UserService) {
+    this.userService = userService;
+  }
+
+  async create(req: Request, res: Response): Promise<any> {
     try {
       const user = await this.userService.create(req.body);
-      res.status(HttpStatusCodes.CREATED).json(user);
+      return res.status(HttpStatusCodes.CREATED).json(user);
     } catch (error: any) {
-      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
+      return res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: error.message });
     }
   }
 
-  async findAll(req: Request, res: Response) {
+  async findAll(req: Request, res: Response): Promise<any> {
     try {
       const users = await this.userService.findAll(req.user);
-      res.status(HttpStatusCodes.OK).json(users);
+      return res.status(HttpStatusCodes.OK).json(users);
     } catch (error: any) {
-      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
+      if (error instanceof ForbiddenError) {
+        return res
+          .status(HttpStatusCodes.FORBIDDEN)
+          .json({ message: error.message });
+      } else {
+        return res
+          .status(HttpStatusCodes.BAD_REQUEST)
+          .json({ error: error.message });
+      }
     }
   }
 
-  async findById(req: Request, res: Response) {
+  async findById(req: Request, res: Response): Promise<any> {
     try {
       const user = await this.userService.findById(
         req.user,
         parseInt(req.params.id)
       );
 
-      if (user) {
-        res.status(HttpStatusCodes.OK).json(user);
-      } else {
-        res
-          .status(HttpStatusCodes.NOT_FOUND)
-          .json({ message: "User not found" });
-      }
+      return res.status(HttpStatusCodes.OK).json(user);
     } catch (error: any) {
-      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
+      if (error instanceof ForbiddenError) {
+        return res
+          .status(HttpStatusCodes.FORBIDDEN)
+          .json({ message: error.message });
+      } else if (error instanceof NotFoundError) {
+        return res
+          .status(HttpStatusCodes.NOT_FOUND)
+          .json({ message: error.message });
+      } else {
+        return res
+          .status(HttpStatusCodes.BAD_REQUEST)
+          .json({ error: error.message });
+      }
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response): Promise<any> {
     try {
       await this.userService.update(
         parseInt(req.params.id),
         req.user,
         req.body
       );
-      res.status(HttpStatusCodes.NO_CONTENT).send();
+      return res.status(HttpStatusCodes.NO_CONTENT).send();
     } catch (error: any) {
-      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
+      if (error instanceof ForbiddenError) {
+        return res
+          .status(HttpStatusCodes.FORBIDDEN)
+          .json({ message: error.message });
+      } else if (error instanceof NotFoundError) {
+        return res
+          .status(HttpStatusCodes.NOT_FOUND)
+          .json({ message: error.message });
+      } else {
+        return res
+          .status(HttpStatusCodes.BAD_REQUEST)
+          .json({ error: error.message });
+      }
     }
   }
 
-  async deleteById(req: Request, res: Response) {
+  async deleteById(req: Request, res: Response): Promise<any> {
     try {
       await this.userService.deleteById(parseInt(req.params.id), req.user);
-      res.status(HttpStatusCodes.NO_CONTENT).send();
+      return res.status(HttpStatusCodes.NO_CONTENT).send();
     } catch (error: any) {
-      res.status(HttpStatusCodes.BAD_REQUEST).json({ error: error.message });
+      if (error instanceof ForbiddenError) {
+        return res
+          .status(HttpStatusCodes.FORBIDDEN)
+          .json({ message: error.message });
+      } else if (error instanceof NotFoundError) {
+        return res
+          .status(HttpStatusCodes.NOT_FOUND)
+          .json({ message: error.message });
+      } else {
+        return res
+          .status(HttpStatusCodes.BAD_REQUEST)
+          .json({ error: error.message });
+      }
     }
   }
 }

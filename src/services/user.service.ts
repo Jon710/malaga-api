@@ -3,6 +3,7 @@ import { UserRepository } from "../repositories/user.repository";
 import { User, UserRole } from "../entities/user.entity";
 import ForbiddenError from "../exceptions/forbidden-exception";
 import UserAlreadyExistsException from "../exceptions/user-exists-exception";
+import NotFoundError from "../exceptions/not-found-exception";
 
 type DecodedUserToken = { id: number; role: UserRole } | undefined;
 
@@ -37,12 +38,16 @@ export class UserService {
     id: number
   ): Promise<User | undefined> {
     const isUser = user?.role === UserRole.USER;
-
-    if (isUser && user?.id !== id) {
+    if (isUser && user.id !== id) {
       throw new ForbiddenError();
     }
 
-    return this.userRepository.findById(id);
+    const foundUser = await this.userRepository.findById(id);
+    if (!foundUser) {
+      throw new NotFoundError();
+    }
+
+    return foundUser;
   }
 
   async update(
@@ -51,9 +56,13 @@ export class UserService {
     data: Partial<User>
   ): Promise<void> {
     const isUser = user?.role === UserRole.USER;
-
     if (isUser && user?.id !== id) {
       throw new ForbiddenError();
+    }
+
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new NotFoundError();
     }
 
     if (data.password) {
@@ -65,9 +74,13 @@ export class UserService {
 
   async deleteById(id: number, user: DecodedUserToken): Promise<void> {
     const isUser = user?.role === UserRole.USER;
-
     if (isUser || user?.id === id) {
       throw new ForbiddenError();
+    }
+
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new NotFoundError();
     }
 
     await this.userRepository.deleteById(id);
