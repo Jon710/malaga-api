@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
 import { User } from "../entities/user.entity";
 import { UserRepository } from "../repositories/user.repository";
 import { UserService } from "./user.service";
@@ -29,7 +28,6 @@ export class AuthService {
   }
 
   async register(user: User): Promise<User> {
-    user.password = await bcrypt.hash(user.password, 10);
     return this.userService.create(user);
   }
 }
